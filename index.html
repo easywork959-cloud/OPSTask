@@ -1646,24 +1646,27 @@ function renderWarRoom(main) {
 
 function warSection(title, tasks, tone) {
   const titlePill = tone === 'danger' ? 'pill-danger' : tone === 'warn' ? 'pill-warn' : 'pill-mint';
+  const rows = tasks.map(t => {
+    const u = personById(t.assignee);
+    const p = projectById(t.project);
+    const days = daysUntil(t.dueDate);
+    return `<div class="flex items-center gap-3 p-3 -mx-2 rounded-xl hover:bg-[var(--mint-bg)] cursor-pointer transition-colors" onclick="openTaskModal('${t.id}')">
+      <div class="avatar avatar-sm" style="background:${u.color};">${initials(u.name)}</div>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-semibold truncate">${escapeHtml(t.title)}</div>
+        <div class="text-xs text-[var(--slate-soft)] mt-0.5 truncate">${escapeHtml(u.name)} · ${escapeHtml(p.name)}</div>
+      </div>
+      <div class="text-xs font-bold whitespace-nowrap ${days < 0 ? 'text-[var(--danger)]' : days <= 3 ? 'text-[var(--warn)]' : 'text-[var(--slate-light)]'}">${days < 0 ? Math.abs(days)+'d late' : days === 0 ? 'today' : days+'d'}</div>
+    </div>`;
+  }).join('');
   return `<div class="card">
     <div class="flex items-center justify-between mb-4">
       <h3 class="font-display text-lg font-bold">${title}</h3>
       <span class="pill ${titlePill}">${tasks.length}</span>
     </div>
-    ${tasks.length ? tasks.slice(0, 6).map(t => {
-      const u = personById(t.assignee);
-      const p = projectById(t.project);
-      const days = daysUntil(t.dueDate);
-      return `<div class="flex items-center gap-3 p-3 -mx-2 rounded-xl hover:bg-[var(--mint-bg)] cursor-pointer transition-colors" onclick="openTaskModal('${t.id}')">
-        <div class="avatar avatar-sm" style="background:${u.color};">${initials(u.name)}</div>
-        <div class="flex-1 min-w-0">
-          <div class="text-sm font-semibold truncate">${escapeHtml(t.title)}</div>
-          <div class="text-xs text-[var(--slate-soft)] mt-0.5 truncate">${escapeHtml(u.name)} · ${escapeHtml(p.name)}</div>
-        </div>
-        <div class="text-xs font-bold whitespace-nowrap ${days < 0 ? 'text-[var(--danger)]' : days <= 3 ? 'text-[var(--warn)]' : 'text-[var(--slate-light)]'}">${days < 0 ? Math.abs(days)+'d late' : days === 0 ? 'today' : days+'d'}</div>
-      </div>`;
-    }).join('') : '<div class="text-sm text-[var(--slate-light)] text-center py-8">Nothing here ✓</div>'}
+    ${tasks.length
+      ? `<div class="${tasks.length > 6 ? 'overflow-y-auto' : ''}" style="${tasks.length > 6 ? 'max-height:360px;' : ''}">${rows}</div>`
+      : '<div class="text-sm text-[var(--slate-light)] text-center py-8">Nothing here ✓</div>'}
   </div>`;
 }
 
