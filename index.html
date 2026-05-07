@@ -1355,7 +1355,18 @@ function openProjectDetail(pid) {
         </div>
         <button onclick="closeModal()" class="text-2xl leading-none text-[var(--slate-light)] hover:text-[var(--slate)] w-8 h-8 rounded-full hover:bg-[var(--mint-bg)] flex items-center justify-center">×</button>
       </div>
-      <p class="text-sm text-[var(--slate-soft)] leading-relaxed mb-6">${escapeHtml(p.description || '')}</p>
+      <p class="text-sm text-[var(--slate-soft)] leading-relaxed ${p.obj || p.pic ? 'mb-3' : 'mb-6'}">${escapeHtml(p.description || '')}</p>
+      ${(p.obj || p.pic) ? `
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-6">
+        ${p.obj ? `<div class="rounded-xl bg-[var(--mint-bg)] px-3 py-2.5">
+          <div class="text-[10px] uppercase tracking-wider text-[var(--slate-light)] font-bold mb-1">Obj</div>
+          <div class="text-sm text-[var(--slate)]">${escapeHtml(p.obj)}</div>
+        </div>` : ''}
+        ${p.pic ? `<div class="rounded-xl bg-[var(--mint-bg)] px-3 py-2.5">
+          <div class="text-[10px] uppercase tracking-wider text-[var(--slate-light)] font-bold mb-1">PIC</div>
+          <div class="text-sm text-[var(--slate)]">${escapeHtml(p.pic)}</div>
+        </div>` : ''}
+      </div>` : ''}
 
       <div class="grid grid-cols-4 gap-3 mb-6">
         <div class="card-tight bg-[var(--mint-bg)] rounded-2xl p-3">
@@ -3835,6 +3846,8 @@ function openProjectModal(pid) {
       <form onsubmit="saveProject(event, '${pid || ''}')" class="space-y-4">
         <div><label class="input-label">Name <span class="text-[var(--danger)]">*</span></label><input class="input" name="name" value="${escapeHtml(p.name)}" required maxlength="80" /></div>
         <div><label class="input-label">Description</label><textarea class="input" name="description" rows="3">${escapeHtml(p.description || '')}</textarea></div>
+        <div><label class="input-label">Obj <span class="text-[10px] text-[var(--slate-light)] font-normal ml-1">Project goal / objective</span></label><input class="input" name="obj" value="${escapeHtml(p.obj || '')}" maxlength="200" placeholder="e.g., Reduce route plan processing time by 30% by Q3" /></div>
+        <div><label class="input-label">PIC <span class="text-[10px] text-[var(--slate-light)] font-normal ml-1">Person in charge / desired outcome</span></label><input class="input" name="pic" value="${escapeHtml(p.pic || '')}" maxlength="200" placeholder="e.g., Operations team fully transitioned to new system" /></div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div><label class="input-label">Owner</label><select class="input" name="owner">${STATE.team.map(u => `<option value="${u.id}" ${p.owner === u.id ? 'selected' : ''}>${escapeHtml(u.name)}</option>`).join('')}</select></div>
           <div><label class="input-label">Status</label><select class="input" name="status">${['Active','Planning','On Hold','Completed'].map(s => `<option value="${s}" ${p.status === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
@@ -3856,7 +3869,7 @@ function openProjectModal(pid) {
 async function saveProject(e, pid) {
   e.preventDefault();
   const f = new FormData(e.target);
-  const data = { name:f.get('name'), description:f.get('description'), status:f.get('status'), priority:f.get('priority'), startDate:f.get('startDate'), dueDate:f.get('dueDate'), owner:f.get('owner') };
+  const data = { name:f.get('name'), description:f.get('description'), obj:f.get('obj')||'', pic:f.get('pic')||'', status:f.get('status'), priority:f.get('priority'), startDate:f.get('startDate'), dueDate:f.get('dueDate'), owner:f.get('owner') };
   if (data.status === 'Completed') {
     data.archived = true;
     data.archivedAt = new Date().toISOString().slice(0, 10);
