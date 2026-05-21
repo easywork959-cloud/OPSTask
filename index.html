@@ -286,20 +286,48 @@
     .card table { min-width: 600px; }
     .card table th, .card table td { padding: 10px 8px !important; font-size: 12px !important; }
 
-    /* Modals — full height drawer style on mobile */
+    /* Modals — full-height bottom drawer on mobile */
     .modal-backdrop { padding: 0; align-items: flex-end; }
-    .modal-content { border-radius: 20px 20px 0 0; max-height: 92vh; max-width: 100%; }
+    .modal-content { border-radius: 20px 20px 0 0; max-height: 95vh; max-width: 100%; }
     .modal-backdrop.modal-fs.with-sidebar { padding-left: 0; }
-    .modal-content > div { padding: 18px !important; }
-    .modal-header-actions { top: 12px; right: 12px; }
+    .modal-content > div { padding: 16px !important; }
+    .modal-header-actions { top: 10px; right: 10px; }
+
+    /* Form fields inside modals — larger touch targets, prevent iOS zoom */
+    .modal-content input,
+    .modal-content textarea,
+    .modal-content select,
+    .modal-content .input { font-size: 16px !important; min-height: 44px; }
+    .modal-content textarea { min-height: 80px; }
+    .modal-content label { font-size: 12px; }
+
+    /* Form rows — stack on mobile so fields don't squeeze */
+    .modal-content .grid.sm\:grid-cols-2,
+    .modal-content .grid.sm\:grid-cols-3,
+    .modal-content .grid.grid-cols-2,
+    .modal-content .grid.grid-cols-3 { grid-template-columns: 1fr !important; gap: 12px !important; }
+
+    /* Buttons in modal footer — full width, easier to tap */
+    .modal-content form > .flex.justify-end,
+    .modal-content form > .flex.justify-between { flex-direction: column-reverse; gap: 8px; align-items: stretch !important; }
+    .modal-content form > .flex.justify-end > .btn,
+    .modal-content form > .flex.justify-between > .btn,
+    .modal-content form > .flex.justify-between > .flex { width: 100%; justify-content: center; }
+    .modal-content form > .flex.justify-between > .flex { flex-direction: column-reverse; gap: 8px; }
+
+    /* Custom category dropdown — wider panel on mobile */
+    #cat-dd-panel { max-height: 50vh !important; }
+    #cat-dropdown { width: 100%; }
+    .cat-dropdown { width: 100%; }
+    #cat-dd-trigger { font-size: 16px !important; min-height: 48px; }
 
     /* Filter bars — wrap better */
-    .ms-trigger { min-width: 120px; font-size: 12px; padding: 8px 12px; }
-    .ms-dropdown { max-width: 90vw; min-width: 200px; }
+    .ms-trigger { min-width: 120px; font-size: 13px; padding: 10px 14px; min-height: 40px; }
+    .ms-dropdown { max-width: 92vw; min-width: 220px; }
 
     /* Timeline period nav */
     .timeline-period { font-size: 14px; min-width: 130px; }
-    .timeline-nav button { width: 34px; height: 34px; }
+    .timeline-nav button { width: 38px; height: 38px; }
 
     /* Performance grid — stack */
     #page-content .grid.grid-cols-12 { display: block !important; }
@@ -407,13 +435,21 @@
   .cal-event.done { opacity: 0.6; text-decoration: line-through; }
 
   /* Timeline Gantt */
-  .gantt-wrap { background: var(--white); border-radius: 16px; padding: 0; overflow: auto; border: 1px solid var(--border); }
-  .gantt-header { display: grid; position: sticky; top: 0; background: var(--mint-bg); z-index: 5; border-bottom: 2px solid var(--border); }
+  .gantt-wrap { background: var(--white); border-radius: 16px; padding: 0; overflow: auto; border: 1px solid var(--border); max-height: 70vh; }
+  .gantt-header { display: grid; position: sticky; top: 0; background: var(--mint-bg); z-index: 6; border-bottom: 2px solid var(--border); }
   .gantt-header-row { display: grid; }
   .gantt-row { display: grid; border-bottom: 1px solid var(--border-soft); min-height: 48px; align-items: center; position: relative; }
   .gantt-row:hover { background: var(--mint-bg); }
-  .gantt-label { padding: 10px 14px; font-size: 13px; font-weight: 600; color: var(--slate); border-right: 1px solid var(--border); display: flex; align-items: center; gap: 8px; background: var(--white); position: sticky; left: 0; z-index: 4; }
   .gantt-row:hover .gantt-label { background: var(--mint-bg); }
+  /* Sticky label column — works with both horizontal AND vertical scroll */
+  .gantt-label { padding: 10px 14px; font-size: 13px; font-weight: 600; color: var(--slate); border-right: 2px solid var(--border); display: flex; align-items: center; gap: 8px; background: var(--white); position: sticky; left: 0; z-index: 4; box-shadow: 4px 0 8px -4px rgba(44,62,74,0.08); }
+  @media (max-width: 768px) {
+    .gantt-label { padding: 8px 10px; font-size: 11px; gap: 6px; }
+    .gantt-label .text-\[11px\] { font-size: 10px !important; }
+    .gantt-wrap { max-height: 65vh; }
+  }
+  /* Header's label cell needs higher z-index because top:sticky AND left:sticky stack */
+  .gantt-header .gantt-label { background: var(--mint-bg); z-index: 7; }
   .gantt-track { position: relative; height: 100%; min-height: 48px; }
   .gantt-day-col { border-right: 1px solid var(--border-soft); height: 100%; }
   .gantt-day-col.weekend { background: rgba(168,212,204,0.08); }
@@ -472,9 +508,28 @@
     <nav class="sidebar-nav" id="sidebar-nav"></nav>
 
     <div class="sidebar-footer">
-      <div class="card card-tight" style="background: rgba(255,255,255,0.5); border-radius: 12px;">
-        <div class="text-xs font-semibold text-[var(--slate)] mb-1">Storage Active</div>
-        <div class="text-[11px] text-[var(--slate-soft)] leading-snug">Data persists across sessions, shared with team.</div>
+      <div style="border-radius:12px;overflow:hidden;">
+        <!-- Mission strip — always visible -->
+        <button onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.caret').style.transform = this.nextElementSibling.classList.contains('hidden') ? '' : 'rotate(180deg)';" class="w-full text-left px-3 py-2.5 flex items-start gap-2 hover:bg-white/30 transition-colors rounded-xl" style="background:rgba(255,255,255,0.22);">
+          <div class="flex-1 min-w-0">
+            <div class="text-[10px] uppercase tracking-widest font-bold mb-1" style="color:var(--teal-deep);opacity:0.7;">Our Mission</div>
+            <div class="text-[11px] leading-snug" style="color:var(--slate);opacity:0.75;">We translate strategy into daily action — aligning the field, monitoring in real time.</div>
+          </div>
+          <svg class="caret flex-shrink-0 mt-0.5 transition-transform" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--slate-light);"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <!-- Core Values — hidden by default, toggle above -->
+        <div class="hidden px-3 pb-3 pt-1 space-y-1.5" style="background:rgba(255,255,255,0.14);border-radius:0 0 12px 12px;">
+          <div class="text-[10px] uppercase tracking-widest font-bold mb-2" style="color:var(--teal-deep);opacity:0.7;">Core Values</div>
+          ${[
+            { name:'Precision',   tag:'100% accuracy',     dot:'#6FB5AA' },
+            { name:'Proactivity', tag:'Real-time alerts',  dot:'#8A6FB5' },
+            { name:'Practicality',tag:'Action-oriented',   dot:'#E8A96A' },
+            { name:'Partnership', tag:'User-centric',      dot:'#3A6B8A' },
+          ].map(v => `<div class="flex items-center gap-2">
+            <div style="width:6px;height:6px;border-radius:50%;background:${v.dot};flex-shrink:0;"></div>
+            <div class="text-[11px]" style="color:var(--slate);opacity:0.8;"><span class="font-bold">${v.name}</span> <span style="opacity:0.6;">— ${v.tag}</span></div>
+          </div>`).join('')}
+        </div>
       </div>
     </div>
   </aside>
@@ -971,6 +1026,26 @@ function renderDashboard(main) {
     <div class="mb-8">
       <h1 class="text-3xl font-extrabold font-display text-[var(--slate)]">Dashboard</h1>
       <p class="text-sm text-[var(--slate-soft)] mt-1">${new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' })} · <span class="live-dot ml-1"></span> Live</p>
+    </div>
+
+    <!-- Mission + Core Values strip — subtle, full width -->
+    <div class="mb-5 px-4 py-3 rounded-2xl flex items-start gap-4 flex-wrap" style="background:linear-gradient(135deg,rgba(168,212,204,0.18) 0%,rgba(111,181,170,0.10) 100%);border:1px solid rgba(111,181,170,0.22);">
+      <div class="flex-1 min-w-[220px]">
+        <div class="text-[10px] uppercase tracking-widest font-bold mb-1" style="color:var(--teal-deep);letter-spacing:0.12em;">Mission</div>
+        <div class="text-[12px] leading-relaxed" style="color:var(--slate);opacity:0.78;">We translate strategy into daily action — aligning the field, monitoring performance in real time, and activating teams with insights they can use today.</div>
+      </div>
+      <div class="flex gap-x-5 gap-y-1 flex-wrap">
+        ${[
+          { name:'Precision',    tag:'100% accuracy',    color:'#6FB5AA' },
+          { name:'Proactivity',  tag:'Real-time alerts', color:'#8A6FB5' },
+          { name:'Practicality', tag:'Action-oriented',  color:'#E8A96A' },
+          { name:'Partnership',  tag:'User-centric',     color:'#3A6B8A' },
+        ].map(v => `<div class="flex items-center gap-1.5 whitespace-nowrap">
+          <div style="width:7px;height:7px;border-radius:50%;background:${v.color};flex-shrink:0;"></div>
+          <span class="text-[11px] font-bold" style="color:${v.color};">${v.name}</span>
+          <span class="text-[11px]" style="color:var(--slate);opacity:0.5;">— ${v.tag}</span>
+        </div>`).join('')}
+      </div>
     </div>
 
     <!-- Top KPIs row -->
@@ -2587,8 +2662,9 @@ function renderGanttView() {
   const visProjects = projects.filter(x => !(x.dueDate < startStr || x.startDate > endStr));
   document.getElementById('timeline-counts').textContent = `${visTasks.length} task${visTasks.length !== 1 ? 's' : ''} · ${visProjects.length} project${visProjects.length !== 1 ? 's' : ''}`;
 
-  const labelW = 240;
-  const dayW = 44; // px per day
+  const isMobile = window.innerWidth < 768;
+  const labelW = isMobile ? 140 : 240;
+  const dayW   = isMobile ? 36 : 44; // px per day
   const gridTemplate = `${labelW}px repeat(${totalDays}, ${dayW}px)`;
 
   // Header row — days
@@ -2874,7 +2950,7 @@ function archiveProjectCard(p) {
 // CLOUD SYNC — Simple Multi-User (no login, polling-based)
 // ============================================================
 const SYNC_CONFIG_KEY = STORAGE_PREFIX + 'sync-config';
-const POLL_INTERVAL_MS = 5000;
+const POLL_INTERVAL_MS = 15000;  // 15s — was 5s (too aggressive, caused flicker)
 
 // ── Detect backend type from URL ──────────────────────────────────────────────
 // Apps Script URLs contain "script.google.com" or end with /exec or /dev
@@ -3148,54 +3224,46 @@ function stopPolling() {
 
 async function pollOnce() {
   if (_polling) return;  // skip if previous poll still running
+  // Skip if a modal is currently open — don't disrupt the user
+  if (document.getElementById('modal-backdrop')) return;
   _polling = true;
   try {
     const data = await apiCall('/api/data');
-    // Compare with local data: if anything is different, merge non-locally-modified items
-    let changed = false;
+    let anyChanged = false;
     ['team', 'projects', 'tasks'].forEach(col => {
       const remote = data[col] || [];
       const local = STATE[col] || [];
-      // Build maps for diff
       const remoteMap = Object.fromEntries(remote.map(x => [x.id, x]));
       const localMap = Object.fromEntries(local.map(x => [x.id, x]));
-      // Detect changes
-      remote.forEach(rItem => {
+      // Per-collection change detection — important: scoped per col, not global
+      let colChanged = false;
+      // New / updated items
+      for (const rItem of remote) {
         const lItem = localMap[rItem.id];
-        const rUpdated = rItem._updated_at;
-        const lUpdated = lItem?._updated_at;
-        // If remote is newer, replace local
-        if (!lItem || (rUpdated && rUpdated !== lUpdated)) {
-          changed = true;
+        if (!lItem) { colChanged = true; break; }
+        if (rItem._updated_at && rItem._updated_at !== lItem._updated_at) {
+          colChanged = true; break;
         }
-      });
-      // Detect deletions (in local but not remote)
-      local.forEach(lItem => {
-        if (!remoteMap[lItem.id]) changed = true;
-      });
-      if (changed) {
-        // Strip server-only fields when storing locally
+      }
+      // Deleted items
+      if (!colChanged) {
+        for (const lItem of local) {
+          if (!remoteMap[lItem.id]) { colChanged = true; break; }
+        }
+      }
+      if (colChanged) {
         STATE[col] = remote.map(stripServerFields);
+        anyChanged = true;
       }
     });
-    if (changed) {
-      // save() only writes to localStorage, doesn't trigger sync
+    const cfg = getSyncConfig(); cfg.lastSyncAt = new Date().toISOString(); setSyncConfig(cfg);
+    if (anyChanged) {
+      // Only persist + render if something actually changed
       await save('team');
       await save('projects');
       await save('tasks');
-      // Show subtle toast indicating teammate update
-      const recentEditors = new Set();
-      ['team', 'projects', 'tasks'].forEach(col => {
-        (data[col] || []).forEach(item => {
-          if (item._updated_by && item._updated_by !== getSyncConfig().userName) {
-            recentEditors.add(item._updated_by);
-          }
-        });
-      });
-      const cfg = getSyncConfig(); cfg.lastSyncAt = new Date().toISOString(); setSyncConfig(cfg);
-      render();
-    } else {
-      const cfg = getSyncConfig(); cfg.lastSyncAt = new Date().toISOString(); setSyncConfig(cfg);
+      // Avoid full re-render if it would clobber form state
+      if (!document.getElementById('modal-backdrop')) render();
     }
     updateSyncIndicator(true);
   } catch (e) {
