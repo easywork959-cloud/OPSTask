@@ -441,8 +441,8 @@
   .gantt-row { display: grid; border-bottom: 1px solid var(--border-soft); min-height: 48px; align-items: center; position: relative; }
   .gantt-row:hover { background: var(--mint-bg); }
   .gantt-row:hover .gantt-label { background: var(--mint-bg); }
-  /* Sticky label column — works with both horizontal AND vertical scroll */
-  .gantt-label { padding: 10px 14px; font-size: 13px; font-weight: 600; color: var(--slate); border-right: 2px solid var(--border); display: flex; align-items: center; gap: 8px; background: var(--white); position: sticky; left: 0; z-index: 4; box-shadow: 4px 0 8px -4px rgba(44,62,74,0.08); }
+  /* Sticky label column — locked width that doesn't shrink during horizontal scroll */
+  .gantt-label { padding: 10px 14px; font-size: 13px; font-weight: 600; color: var(--slate); border-right: 2px solid var(--border); display: flex; align-items: center; gap: 8px; background: var(--white); position: sticky; left: 0; z-index: 4; box-shadow: 4px 0 8px -4px rgba(44,62,74,0.08); flex-shrink: 0; box-sizing: border-box; overflow: hidden; }
   @media (max-width: 768px) {
     .gantt-label { padding: 8px 10px; font-size: 11px; gap: 6px; }
     .gantt-label .text-\[11px\] { font-size: 10px !important; }
@@ -2665,7 +2665,9 @@ function renderGanttView() {
   const isMobile = window.innerWidth < 768;
   const labelW = isMobile ? 140 : 240;
   const dayW   = isMobile ? 36 : 44; // px per day
-  const gridTemplate = `${labelW}px repeat(${totalDays}, ${dayW}px)`;
+  // Use minmax() to LOCK label column at exact width — prevents it from shrinking
+  // when track content overflows during horizontal scroll
+  const gridTemplate = `minmax(${labelW}px, ${labelW}px) repeat(${totalDays}, ${dayW}px)`;
 
   // Header row — days
   let headerCells = '';
@@ -2707,7 +2709,7 @@ function renderGanttView() {
     const barClass = isOverdue ? 'overdue-bar' : 'project-bar';
     const tracks = `<div style="display:grid;grid-template-columns: repeat(${totalDays}, ${dayW}px); position:absolute; inset:0;">${colBg}</div>`;
     rows += `<div class="gantt-row" style="grid-template-columns: ${gridTemplate};">
-      <div class="gantt-label" style="width:${labelW}px;">
+      <div class="gantt-label">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--teal-deep);flex-shrink:0;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
         <div class="min-w-0 flex-1">
           <div class="truncate">${escapeHtml(p.name)}</div>
@@ -2731,7 +2733,7 @@ function renderGanttView() {
     const ptClass = tk.status === 'Done' ? 'done-pt' : isOverdue ? 'overdue-pt' : 'task-pt';
     const tracks = `<div style="display:grid;grid-template-columns: repeat(${totalDays}, ${dayW}px); position:absolute; inset:0;">${colBg}</div>`;
     rows += `<div class="gantt-row" style="grid-template-columns: ${gridTemplate};">
-      <div class="gantt-label" style="width:${labelW}px;">
+      <div class="gantt-label">
         <div class="avatar avatar-sm" style="background:${owner.color};flex-shrink:0;">${initials(owner.name)}</div>
         <div class="min-w-0 flex-1">
           <div class="truncate">${escapeHtml(tk.title)}</div>
@@ -2752,7 +2754,7 @@ function renderGanttView() {
   const html = `
     <div class="gantt-wrap">
       <div class="gantt-header" style="grid-template-columns: ${gridTemplate};">
-        <div class="gantt-label" style="width:${labelW}px; background: var(--mint-bg); border-right: 1px solid var(--border); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--slate-soft); padding: 12px 14px;">Item / Owner</div>
+        <div class="gantt-label" style="background: var(--mint-bg); border-right: 1px solid var(--border); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--slate-soft); padding: 12px 14px;">Item / Owner</div>
         ${headerCells}
       </div>
       ${rows}
