@@ -436,12 +436,12 @@
 
   /* Timeline Gantt */
   .gantt-wrap { background: var(--white); border-radius: 16px; padding: 0; overflow: auto; border: 1px solid var(--border); max-height: 70vh; }
-  .gantt-header { display: grid; position: sticky; top: 0; background: var(--mint-bg); z-index: 6; border-bottom: 2px solid var(--border); }
-  .gantt-header-row { display: grid; }
-  .gantt-row { display: grid; border-bottom: 1px solid var(--border-soft); min-height: 48px; align-items: center; position: relative; }
+  /* IMPORTANT: header + row use FLEX (not grid) so sticky label can span full scroll width */
+  .gantt-header { display: flex; position: sticky; top: 0; background: var(--mint-bg); z-index: 6; border-bottom: 2px solid var(--border); width: max-content; min-width: 100%; }
+  .gantt-row { display: flex; border-bottom: 1px solid var(--border-soft); min-height: 48px; align-items: stretch; position: relative; width: max-content; min-width: 100%; }
   .gantt-row:hover { background: var(--mint-bg); }
   .gantt-row:hover .gantt-label { background: var(--mint-bg); }
-  /* Sticky label column — locked width that doesn't shrink during horizontal scroll */
+  /* Sticky label column — flex layout makes left:0 work across entire scroll width */
   .gantt-label { padding: 10px 14px; font-size: 13px; font-weight: 600; color: var(--slate); border-right: 2px solid var(--border); display: flex; align-items: center; gap: 8px; background: var(--white); position: sticky; left: 0; z-index: 4; box-shadow: 4px 0 8px -4px rgba(44,62,74,0.08); flex-shrink: 0; box-sizing: border-box; overflow: hidden; }
   @media (max-width: 768px) {
     .gantt-label { padding: 8px 10px; font-size: 11px; gap: 6px; }
@@ -450,11 +450,11 @@
   }
   /* Header's label cell needs higher z-index because top:sticky AND left:sticky stack */
   .gantt-header .gantt-label { background: var(--mint-bg); z-index: 7; }
-  .gantt-track { position: relative; height: 100%; min-height: 48px; }
+  .gantt-track { position: relative; flex-shrink: 0; min-height: 48px; }
   .gantt-day-col { border-right: 1px solid var(--border-soft); height: 100%; }
   .gantt-day-col.weekend { background: rgba(168,212,204,0.08); }
   .gantt-day-col.today-col { background: rgba(168,212,204,0.25); }
-  .gantt-day-head { padding: 8px 4px; text-align: center; font-size: 10px; font-weight: 700; color: var(--slate-soft); border-right: 1px solid var(--border-soft); }
+  .gantt-day-head { padding: 8px 4px; text-align: center; font-size: 10px; font-weight: 700; color: var(--slate-soft); border-right: 1px solid var(--border-soft); flex-shrink: 0; box-sizing: border-box; }
   .gantt-day-head.weekend { background: rgba(168,212,204,0.08); }
   .gantt-day-head .gantt-day-num { font-size: 14px; font-weight: 800; color: var(--slate); margin-top: 2px; display: block; }
   .gantt-day-head.today-head .gantt-day-num { background: var(--slate); color: white; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin: 2px auto 0; font-size: 11px; }
@@ -2676,7 +2676,7 @@ function renderGanttView() {
     const dStr = d.toISOString().slice(0, 10);
     const isWeekend = d.getDay() === 0 || d.getDay() === 6;
     const isToday = dStr === todayStr;
-    headerCells += `<div class="gantt-day-head ${isWeekend ? 'weekend' : ''} ${isToday ? 'today-head' : ''}">
+    headerCells += `<div class="gantt-day-head ${isWeekend ? 'weekend' : ''} ${isToday ? 'today-head' : ''}" style="width:${dayW}px;">
       <div>${d.toLocaleString('en-US', { weekday: 'short' }).slice(0,1)}</div>
       <span class="gantt-day-num">${d.getDate()}</span>
     </div>`;
@@ -2688,7 +2688,7 @@ function renderGanttView() {
     const d = new Date(startDate); d.setDate(d.getDate() + i);
     const isWeekend = d.getDay() === 0 || d.getDay() === 6;
     const isToday = d.toISOString().slice(0,10) === todayStr;
-    colBg += `<div class="gantt-day-col ${isWeekend ? 'weekend' : ''} ${isToday ? 'today-col' : ''}" style="grid-column: ${i+1};"></div>`;
+    colBg += `<div class="gantt-day-col ${isWeekend ? 'weekend' : ''} ${isToday ? 'today-col' : ''}" style="width:${dayW}px; flex-shrink:0;"></div>`;
   }
 
   // Days offset helper
@@ -2707,16 +2707,16 @@ function renderGanttView() {
     const width = Math.max(dayW - 4, (endOff - startOff + 1) * dayW - 4);
     const isOverdue = p.status !== 'Completed' && p.dueDate < todayStr;
     const barClass = isOverdue ? 'overdue-bar' : 'project-bar';
-    const tracks = `<div style="display:grid;grid-template-columns: repeat(${totalDays}, ${dayW}px); position:absolute; inset:0;">${colBg}</div>`;
-    rows += `<div class="gantt-row" style="grid-template-columns: ${gridTemplate};">
-      <div class="gantt-label">
+    const tracks = `<div style="display:flex; position:absolute; inset:0;">${colBg}</div>`;
+    rows += `<div class="gantt-row">
+      <div class="gantt-label" style="width:${labelW}px; min-width:${labelW}px; max-width:${labelW}px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--teal-deep);flex-shrink:0;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
         <div class="min-w-0 flex-1">
           <div class="truncate">${escapeHtml(p.name)}</div>
           <div class="text-[11px] font-normal text-[var(--slate-soft)] truncate">${escapeHtml(owner.name)}</div>
         </div>
       </div>
-      <div class="gantt-track" style="grid-column: 2 / -1; position: relative;">
+      <div class="gantt-track" style="width:${totalDays * dayW}px; position: relative;">
         ${tracks}
         <div class="gantt-bar ${barClass}" style="left:${left}px; width:${width}px;" onclick="openProjectDetail('${p.id}')" title="${escapeHtml(p.name)} (${fmtDate(p.startDate)} → ${fmtDate(p.dueDate)})">
           ${escapeHtml(p.name)}
@@ -2731,16 +2731,16 @@ function renderGanttView() {
     const left = off * dayW + dayW / 2;
     const isOverdue = tk.status !== 'Done' && tk.dueDate < todayStr;
     const ptClass = tk.status === 'Done' ? 'done-pt' : isOverdue ? 'overdue-pt' : 'task-pt';
-    const tracks = `<div style="display:grid;grid-template-columns: repeat(${totalDays}, ${dayW}px); position:absolute; inset:0;">${colBg}</div>`;
-    rows += `<div class="gantt-row" style="grid-template-columns: ${gridTemplate};">
-      <div class="gantt-label">
+    const tracks = `<div style="display:flex; position:absolute; inset:0;">${colBg}</div>`;
+    rows += `<div class="gantt-row">
+      <div class="gantt-label" style="width:${labelW}px; min-width:${labelW}px; max-width:${labelW}px;">
         <div class="avatar avatar-sm" style="background:${owner.color};flex-shrink:0;">${initials(owner.name)}</div>
         <div class="min-w-0 flex-1">
           <div class="truncate">${escapeHtml(tk.title)}</div>
           <div class="text-[11px] font-normal text-[var(--slate-soft)] truncate">${escapeHtml(projectById(tk.project).name)} · ${escapeHtml(tk.status)}</div>
         </div>
       </div>
-      <div class="gantt-track" style="grid-column: 2 / -1; position: relative;">
+      <div class="gantt-track" style="width:${totalDays * dayW}px; position: relative;">
         ${tracks}
         <div class="gantt-point ${ptClass}" style="left:${left}px;" onclick="openTaskModal('${tk.id}')" title="${escapeHtml(tk.title)} — Due ${fmtDate(tk.dueDate)}"></div>
       </div>
@@ -2753,9 +2753,11 @@ function renderGanttView() {
 
   const html = `
     <div class="gantt-wrap">
-      <div class="gantt-header" style="grid-template-columns: ${gridTemplate};">
-        <div class="gantt-label" style="background: var(--mint-bg); border-right: 1px solid var(--border); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--slate-soft); padding: 12px 14px;">Item / Owner</div>
-        ${headerCells}
+      <div class="gantt-header">
+        <div class="gantt-label" style="width:${labelW}px; min-width:${labelW}px; max-width:${labelW}px; background: var(--mint-bg); border-right: 1px solid var(--border); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--slate-soft); padding: 12px 14px;">Item / Owner</div>
+        <div style="display:flex; width:${totalDays * dayW}px;">
+          ${headerCells}
+        </div>
       </div>
       ${rows}
     </div>
